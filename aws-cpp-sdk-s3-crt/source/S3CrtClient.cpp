@@ -315,9 +315,17 @@ static int S3CrtRequestGetBodyCallback(struct aws_s3_meta_request *meta_request,
   auto& bodyStream = userData->response->GetResponseBody();
 
   bodyStream.write(reinterpret_cast<char*>(body->ptr), static_cast<std::streamsize>(body->len));
+  if (!bodyStream.good())
+  {
+      aws_translate_and_raise_io_error(errno);
+  }
   if (userData->request->IsEventStreamRequest())
   {
     bodyStream.flush();
+    if (!bodyStream.good())
+    {
+        aws_translate_and_raise_io_error(errno);
+    }
   }
 
   // data sent handler and continuation handler will be supported later when aws_c_s3 support it.
